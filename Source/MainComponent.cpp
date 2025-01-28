@@ -305,13 +305,13 @@ bool MainComponent::RunModel()
     auto output_tensors = m_Session->Run(Ort::RunOptions{ nullptr }, input_names_char.data(), input_tensors.data(),
       input_names_char.size(), output_names_char.data(), output_names_char.size());
 
-    // Creation de l'image de sortie en RGB
-    juce::Image outImage(juce::Image::RGB, output_shape[2], output_shape[3], true);
+    // Creation de l'image de sortie en ARGB
+    juce::Image outImage(juce::Image::ARGB, output_shape[2], output_shape[3], true);
     juce::Image::BitmapData outData(outImage, juce::Image::BitmapData::readWrite);
     float* arr = output_tensors.front().GetTensorMutableData<float>();
 
     for (int i = 0; i < outData.height; i++) {
-      juce::uint8* line = outData.getLinePointer(i);
+      uint32_t* rgba = (uint32_t*)outData.getLinePointer(i);
       for (int j = 0; j < outData.width; j++) {
         float max = -1000., value;
         int index = 0;
@@ -326,64 +326,49 @@ bool MainComponent::RunModel()
         }
 
         // Application d'une table de couleurs pour rendre la sortie jolie ...
-        if (index == 0) {
-          *line = 154; line++; *line = 14; line++; *line = 219; line++;
+        switch (index) {
+        case 0: // building
+          *rgba = 0xdb0e9a; break;
+        case 1: // pervious surface
+          *rgba = 0x938e7b; break;
+        case 2: // impervious surface
+          *rgba = 0xf80c00; break;
+        case 3: // bare soil
+          *rgba = 0xa97101; break;
+        case 4: // water
+          *rgba = 0x1553ae; break;
+        case 5: // coniferous
+          *rgba = 0x194a26; break;
+        case 6: // deciduous
+          *rgba = 0x46e483; break;
+        case 7: // brushwood
+          *rgba = 0xf3a60d; break;
+        case 8: // vineyard
+          *rgba = 0x660082; break;
+        case 9: // herbaceous vegetation
+          *rgba = 0x55ff00; break;
+        case 10: // agricultural land
+          *rgba = 0xfff30d; break;
+        case 11: // plowed land
+          *rgba = 0xe4df7c; break;
+        case 12: // swimming_pool
+          *rgba = 0x3de6eb; break;
+        case 13: // snow
+          *rgba = 0xffffff; break;
+        case 14: // clear cut
+          *rgba = 0x8ab3a0; break;
+        case 15: // mixed
+          *rgba = 0x6b714f; break;
+        case 16: // ligneous
+          *rgba = 0xc5dc42; break;
+        case 17: // greenhouse
+          *rgba = 0x9999ff; break;
+        default:
+          *rgba = 0;
         }
-        if (index == 1) {
-          *line = 123; line++; *line = 142; line++; *line = 147; line++;
-        }
-        if (index == 2) {
-          *line = 0; line++; *line = 12; line++; *line = 248; line++;
-        }
-        if (index == 3) {
-          *line = 1; line++; *line = 113; line++; *line = 169; line++;
-        }
-        if (index == 4) {
-          *line = 174; line++; *line = 83; line++; *line = 21; line++;
-        }
-        if (index == 5) {
-          *line = 38; line++; *line = 74; line++; *line = 25; line++;
-        }
-        if (index == 6) {
-          *line = 131; line++; *line = 228; line++; *line = 70; line++;
-        }
-        if (index == 7) {
-          *line = 13; line++; *line = 166; line++; *line = 243; line++;
-        }
-        if (index == 8) {
-          *line = 130; line++; *line = 0; line++; *line = 102; line++;
-        }
-        if (index == 9) {
-          *line = 0; line++; *line = 255; line++; *line = 85; line++;
-        }
-        if (index == 10) {
-          *line = 13; line++; *line = 243; line++; *line = 255; line++;
-        }
-        if (index == 11) {
-          *line = 124; line++; *line = 223; line++; *line = 228; line++;
-        }
-        if (index == 12) {
-          *line = 235; line++; *line = 230; line++; *line = 61; line++;
-        }
-        if (index == 13) {
-          *line = 255; line++; *line = 255; line++; *line = 255; line++;
-        }
-        if (index == 14) {
-          *line = 160; line++; *line = 179; line++; *line = 138; line++;
-        }
-        if (index == 15) {
-          *line = 79; line++; *line = 113; line++; *line = 107; line++;
-        }
-        if (index == 16) {
-          *line = 66; line++; *line = 220; line++; *line = 197; line++;
-        }
-        if (index == 17) {
-          *line = 255; line++; *line = 153; line++; *line = 153; line++;
-        }
-        if (index == 18) {
-          *line = 0; line++; *line = 0; line++; *line = 0; line++;
-        }
-
+         
+        rgba++;
+       
         arr++;
       }
     }
