@@ -148,7 +148,7 @@ bool MainComponent::LoadModel()
   if (m_Session != nullptr)   // On detruit la session si un modele a deja ete charge
     delete m_Session;
 
-  juce::String filename = AppUtil::OpenFile("Model", "Modele de classification FLAIR", "*.*");
+  juce::String filename = AppUtil::OpenFile("Model", "Modele de classification FLAIR", "*.onnx");
   if (filename.isEmpty())
     return false;
   juce::File modelFile(filename);
@@ -275,7 +275,7 @@ bool MainComponent::RunModel()
       // Ordre BGR dans les images JUCE
       input_tensor_values[cmpt + 2 * channel_size] = (line[0] - 101.82) / 44.;
       input_tensor_values[cmpt + channel_size] = (line[1] - 110.87) / 45.38;
-      input_tensor_values[cmpt] = (line[3] - 105.08) / 52.17;
+      input_tensor_values[cmpt] = (line[2] - 105.08) / 52.17;
       cmpt++;
       line += bitmap.pixelStride;
     }
