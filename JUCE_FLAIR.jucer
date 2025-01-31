@@ -37,8 +37,9 @@
     </LINUX_MAKE>
     <VS2022 targetFolder="Builds/VisualStudio2022" externalLibraries="onnxruntime.lib">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="JUCE_FLAIR" headerPath="$(SolutionDir)\..\..\..\onnxruntime-win-x64-static_lib-1.20.1\include"
-                       libraryPath="$(SolutionDir)\..\..\..\onnxruntime-win-x64-static_lib-1.20.1\lib"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="JUCE_FLAIR" headerPath="$(SolutionDir)\..\..\..\onnxruntime-win-x64-1.20.1\include"
+                       libraryPath="$(SolutionDir)\..\..\..\onnxruntime-win-x64-1.20.1\lib"
+                       useRuntimeLibDLL="1"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="JUCE_FLAIR" headerPath="$(SolutionDir)\..\..\..\onnxruntime-win-x64-static_lib-1.20.1\include"
                        libraryPath="$(SolutionDir)\..\..\..\onnxruntime-win-x64-static_lib-1.20.1\lib"
                        useRuntimeLibDLL="0"/>

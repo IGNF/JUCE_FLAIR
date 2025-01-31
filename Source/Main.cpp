@@ -64,7 +64,7 @@ public:
                                                           .findColour (juce::ResizableWindow::backgroundColourId),
                               DocumentWindow::allButtons)
         {
-            setUsingNativeTitleBar (true);
+            setUsingNativeTitleBar (false);
             setContentOwned (new MainComponent(), true);
 
            #if JUCE_IOS || JUCE_ANDROID
@@ -75,6 +75,7 @@ public:
            #endif
 
             setVisible (true);
+            setResizeLimits(800, 600, 4000, 4000);
         }
 
         void closeButtonPressed() override

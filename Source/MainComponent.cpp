@@ -33,19 +33,25 @@ MainComponent::MainComponent()
   addAndMakeVisible(m_btnLoadModel);
   addAndMakeVisible(m_lblModel);
 
+  m_btnAbout.setButtonText(juce::translate("About"));
+  m_btnAbout.addListener(this);
+  addAndMakeVisible(m_btnAbout);
+
   addAndMakeVisible(m_InputImage);
   addAndMakeVisible(m_OutputImage);
+  addAndMakeVisible(m_Legend);
+  CreateLegend();
 
   m_sldRow.setSliderStyle(juce::Slider::LinearHorizontal);
   m_sldRow.setRange(175000., 194000., 1.);
- m_sldRow.setTextBoxStyle(juce::Slider::TextBoxLeft, true, 100, 30);
+  m_sldRow.setTextBoxStyle(juce::Slider::TextBoxAbove, true, 100, 25);
   m_sldRow.setTextValueSuffix(juce::translate(" : Row"));
   m_sldRow.addListener(this);
   addAndMakeVisible(m_sldRow);
 
   m_sldCol.setSliderStyle(juce::Slider::LinearHorizontal);
   m_sldCol.setRange(255000., 273000., 1.);
-  m_sldCol.setTextBoxStyle(juce::Slider::TextBoxLeft, true, 100, 30);
+  m_sldCol.setTextBoxStyle(juce::Slider::TextBoxAbove, true, 100, 25);
   m_sldCol.setTextValueSuffix(juce::translate(" : Col"));
   m_sldCol.addListener(this);
   addAndMakeVisible(m_sldCol);
@@ -53,7 +59,18 @@ MainComponent::MainComponent()
   m_sldRow.setValue(m_nTileRow, juce::NotificationType::dontSendNotification);
   m_sldCol.setValue(m_nTileCol, juce::NotificationType::dontSendNotification);
 
-  setSize (800, 600);
+  m_cbxPlace.addItem("Vaux-le-Vicomte", 1);
+  m_cbxPlace.addItem("IGN", 2);
+  m_cbxPlace.addItem("Bernay-Vilbert", 3);
+  m_cbxPlace.addItem("Berck", 4);
+  m_cbxPlace.addItem("Vannes", 5);
+  m_cbxPlace.addItem("Saumur", 6);
+  m_cbxPlace.addListener(this);
+  m_cbxPlace.setWantsKeyboardFocus(false);
+  m_cbxPlace.setSelectedId(1, juce::NotificationType::dontSendNotification);
+  addAndMakeVisible(m_cbxPlace);
+
+  setSize (1000, 600);
 }
 
 //-----------------------------------------------------------------------------
@@ -78,12 +95,17 @@ void MainComponent::paint (juce::Graphics& g)
 void MainComponent::resized()
 {
   auto b = getLocalBounds();
-  m_InputImage.setBounds(5, 5, b.getWidth() / 2 - 10, b.getHeight() - 100);
-  m_OutputImage.setBounds(b.getWidth() / 2 + 5, 5, b.getWidth() / 2 - 10, b.getHeight() - 100);
-  m_btnLoadModel.setBounds(5, b.getHeight() - 30, 80, 30);
-  m_lblModel.setBounds(85, b.getHeight() - 30, 200, 30);
-  m_sldRow.setBounds(300, b.getHeight() - 30, 200, 30);
-  m_sldCol.setBounds(550, b.getHeight() - 30, 200, 30);
+
+  m_InputImage.setBounds(5, 5, b.getWidth() / 2 - 60, b.getHeight() - 100);
+  m_OutputImage.setBounds(b.getWidth() / 2 - 60 + 5, 5, b.getWidth() / 2 - 60, b.getHeight() - 100);
+  m_Legend.setBounds(b.getWidth() - 105, 5, 100, 30 * m_nNbTag);
+
+  m_btnLoadModel.setBounds(5, b.getHeight() - 35, 80, 30);
+  m_lblModel.setBounds(85, b.getHeight() - 35, 200, 30);
+  m_sldRow.setBounds(300, b.getHeight() - 50, 150, 45);
+  m_sldCol.setBounds(460, b.getHeight() - 50, 150, 45);
+  m_cbxPlace.setBounds(640, b.getHeight() - 50, 150, 45);
+  m_btnAbout.setBounds(800, b.getHeight() - 35, 80, 30);
 }
 
 //-----------------------------------------------------------------------------
@@ -93,6 +115,13 @@ void 	MainComponent::buttonClicked(juce::Button* button)
 {
   if (button == &m_btnLoadModel)
     LoadModel();
+  if (button == &m_btnAbout) {
+    juce::String message = juce::String("Permet d'inférer un modele type FLAIR au format ONNX\n");
+    message += juce::String("Charge des dalles orthophotos de la GéoPlateforme (à 15 cm de résolution)\n\n");
+    message += juce::String("Les flèches du clavier permettent de se déplacer\n\n");
+    message += juce::String("(C) 2025 IGN / DSI / SIMV\n");
+    juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon, juce::translate("About JUCE_FLAIR"), message, "OK");
+  }
 }
 
 //==============================================================================
@@ -105,6 +134,44 @@ void MainComponent::sliderValueChanged(juce::Slider* slider)
     m_nTileRow = (int)m_sldRow.getValue();
     LoadInputImage();
   }
+}
+
+//==============================================================================
+// Modification des combo-box
+//==============================================================================
+void MainComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
+{
+  if (comboBoxThatHasChanged != &m_cbxPlace)
+    return;
+  switch (m_cbxPlace.getSelectedId()) {
+  case 1 : // Vaux-le-Vicomte
+    m_nTileRow = 181013;
+    m_nTileCol = 266099;
+    break;
+  case 2 : // IGN
+    m_nTileRow = 180395;
+    m_nTileCol = 265674;
+    break;
+  case 3: // Bernay-Vilbert
+    m_nTileRow = 180780;
+    m_nTileCol = 266422;
+    break;
+  case 4: // Berck
+    m_nTileRow = 176886;
+    m_nTileCol = 264414;
+    break;
+  case 5: // Vannes
+    m_nTileRow = 183057;
+    m_nTileCol = 258099;
+    break;
+  case 6: // Saumur
+    m_nTileRow = 183841;
+    m_nTileCol = 261948;
+    break;
+  }
+  m_sldCol.setValue(m_nTileCol, juce::NotificationType::dontSendNotification);
+  m_sldRow.setValue(m_nTileRow, juce::NotificationType::dontSendNotification);
+  LoadInputImage();
 }
 
 //==============================================================================
@@ -139,6 +206,26 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
   return false;	// On transmet l'evenement sans le traiter
 }
 
+//-----------------------------------------------------------------------------
+// Creation d'une image pour la legende
+//-----------------------------------------------------------------------------
+void MainComponent::CreateLegend()
+{
+  juce::Image legend(juce::Image::ARGB, 100, m_nNbTag * 30, true);
+  {
+    juce::Graphics g(legend);
+    uint32_t color;
+    uint8_t* ptr = (uint8_t*)&color;
+    for (int i = 0; i < m_nNbTag; i++) {
+      color = m_Colors[i];
+      g.setColour(juce::Colour(ptr[2], ptr[1], ptr[0], (uint8_t)255));
+      g.fillRect(0, i * 30, 100, 30);
+      g.setColour(juce::Colours::black);
+      g.drawText(m_Tag[i], 0, i * 30, 100, 30, juce::Justification::centred);
+    }
+  }
+  m_Legend.setImage(legend);
+}
 
 //-----------------------------------------------------------------------------
 // Chargement d'un modele
@@ -260,7 +347,7 @@ bool MainComponent::RunModel()
   if ((bitmap.height != input_shape[3])|| (bitmap.width != input_shape[2]) || (bitmap.pixelStride < input_shape[1]))
     return false;
 
-  int total_number_elements = input_shape[3] * input_shape[2] * input_shape[1];
+  int total_number_elements = (int)(input_shape[3] * input_shape[2] * input_shape[1]);
   std::vector<float> input_tensor_values(total_number_elements);
   
   // Recuperation des valeurs des pixels
@@ -273,9 +360,9 @@ bool MainComponent::RunModel()
         norm_stds: [52.17, 45.38, 44, 39.69, 79.3]
       */
       // Ordre BGR dans les images JUCE
-      input_tensor_values[cmpt + 2 * channel_size] = (line[0] - 101.82) / 44.;
-      input_tensor_values[cmpt + channel_size] = (line[1] - 110.87) / 45.38;
-      input_tensor_values[cmpt] = (line[2] - 105.08) / 52.17;
+      input_tensor_values[cmpt + 2 * channel_size] = (float)((line[0] - 101.82) / 44.);
+      input_tensor_values[cmpt + channel_size] = (float)((line[1] - 110.87) / 45.38);
+      input_tensor_values[cmpt] = (float)((line[2] - 105.08) / 52.17);
       cmpt++;
       line += bitmap.pixelStride;
     }
@@ -306,7 +393,7 @@ bool MainComponent::RunModel()
       input_names_char.size(), output_names_char.data(), output_names_char.size());
 
     // Creation de l'image de sortie en ARGB
-    juce::Image outImage(juce::Image::ARGB, output_shape[2], output_shape[3], true);
+    juce::Image outImage(juce::Image::ARGB, (int)output_shape[2], (int)output_shape[3], true);
     juce::Image::BitmapData outData(outImage, juce::Image::BitmapData::readWrite);
     float* arr = output_tensors.front().GetTensorMutableData<float>();
 
@@ -326,49 +413,12 @@ bool MainComponent::RunModel()
         }
 
         // Application d'une table de couleurs pour rendre la sortie jolie ...
-        switch (index) {
-        case 0: // building
-          *rgba = 0xdb0e9a; break;
-        case 1: // pervious surface
-          *rgba = 0x938e7b; break;
-        case 2: // impervious surface
-          *rgba = 0xf80c00; break;
-        case 3: // bare soil
-          *rgba = 0xa97101; break;
-        case 4: // water
-          *rgba = 0x1553ae; break;
-        case 5: // coniferous
-          *rgba = 0x194a26; break;
-        case 6: // deciduous
-          *rgba = 0x46e483; break;
-        case 7: // brushwood
-          *rgba = 0xf3a60d; break;
-        case 8: // vineyard
-          *rgba = 0x660082; break;
-        case 9: // herbaceous vegetation
-          *rgba = 0x55ff00; break;
-        case 10: // agricultural land
-          *rgba = 0xfff30d; break;
-        case 11: // plowed land
-          *rgba = 0xe4df7c; break;
-        case 12: // swimming_pool
-          *rgba = 0x3de6eb; break;
-        case 13: // snow
-          *rgba = 0xffffff; break;
-        case 14: // clear cut
-          *rgba = 0x8ab3a0; break;
-        case 15: // mixed
-          *rgba = 0x6b714f; break;
-        case 16: // ligneous
-          *rgba = 0xc5dc42; break;
-        case 17: // greenhouse
-          *rgba = 0x9999ff; break;
-        default:
+        if (index < m_nNbTag)
+          *rgba = m_Colors[index];
+        else
           *rgba = 0;
-        }
          
         rgba++;
-       
         arr++;
       }
     }
