@@ -3,6 +3,12 @@
 ## Description/Résumé du projet
 Cette petite application développée avec JUCE permet d'inférer sur un modèle type FLAIR (3 canaux RGB).
 L'application charge des dalles orthophotos de la GéoPlateforme et applique le modèle.
+
+<div align="center">
+<img alt="JUCE_FLAIR" src="https://raw.githubusercontent.com/IGNF/JUCE_FLAIR/master/Documentation/JUCE_FLAIR.jpg">
+</div><br>
+
+
 On récupère donc une image de même résolution avec les codes couleurs suivants :
 
 1   : ['building','#db0e9a'] ,
