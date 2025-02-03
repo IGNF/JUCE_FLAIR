@@ -26,7 +26,7 @@ namespace AppUtil {
 }
 
 //==============================================================================
-// ToolWindow : class merer pour les fenetres container outils
+// ToolWindow : classe mere pour les fenetres container outils
 //==============================================================================
 class ToolWindow : public juce::DocumentWindow {
 public:
@@ -38,8 +38,31 @@ public:
 
 	void closeButtonPressed() override { setVisible(false); }
 	virtual void SetTarget(const double& /*X*/, const double& /*Y*/, const double& /*Z*/) = 0;
+	virtual void SetSelection(void*) = 0;
 
 private:
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ToolWindow)
+};
+
+//==============================================================================
+// ColourChangeButton : bouton permettant de choisir une couleur
+//==============================================================================
+class ColourChangeButton : public juce::TextButton, public juce::ChangeListener {
+public:
+  ColourChangeButton() : TextButton("Click to change colour...")
+  {
+    setSize(10, 24);
+    changeWidthToFitText();
+  }
+
+	void clicked() override;
+
+  //using TextButton::clicked;
+
+  void changeListenerCallback(juce::ChangeBroadcaster* source) override
+  {
+    if (auto* cs = dynamic_cast<juce::ColourSelector*> (source))
+      setColour(juce::TextButton::buttonColourId, cs->getCurrentColour());
+  }
 };

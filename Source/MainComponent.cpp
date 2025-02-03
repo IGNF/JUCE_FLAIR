@@ -1,5 +1,4 @@
 #include "MainComponent.h"
-#include "AppUtil.h"
 #include <vector>
 
 //-----------------------------------------------------------------------------
@@ -39,8 +38,6 @@ MainComponent::MainComponent()
 
   addAndMakeVisible(m_InputImage);
   addAndMakeVisible(m_OutputImage);
-  addAndMakeVisible(m_Legend);
-  CreateLegend();
 
   m_sldRow.setSliderStyle(juce::Slider::LinearHorizontal);
   m_sldRow.setRange(175000., 194000., 1.);
@@ -70,6 +67,14 @@ MainComponent::MainComponent()
   m_cbxPlace.setSelectedId(1, juce::NotificationType::dontSendNotification);
   addAndMakeVisible(m_cbxPlace);
 
+  LoadLegend();
+  for (int i = 0; i < m_nNbTag; i++) {
+    m_btnColors[i].setButtonText(m_Tag[i]);
+    m_btnColors[i].setColour(juce::TextButton::buttonColourId, juce::Colour(m_Colors[i]));
+    addAndMakeVisible(m_btnColors[i]);
+    m_btnColors[i].addActionListener(this);
+  }
+
   setSize (1000, 600);
 }
 
@@ -98,7 +103,8 @@ void MainComponent::resized()
 
   m_InputImage.setBounds(5, 5, b.getWidth() / 2 - 60, b.getHeight() - 100);
   m_OutputImage.setBounds(b.getWidth() / 2 - 60 + 5, 5, b.getWidth() / 2 - 60, b.getHeight() - 100);
-  m_Legend.setBounds(b.getWidth() - 105, 5, 100, 30 * m_nNbTag);
+  for (int i = 0; i < m_nNbTag; i++)
+    m_btnColors[i].setBounds(b.getWidth() - 105, 5 + 30 * i, 100, 30);
 
   m_btnLoadModel.setBounds(5, b.getHeight() - 35, 80, 30);
   m_lblModel.setBounds(85, b.getHeight() - 35, 200, 30);
@@ -175,6 +181,22 @@ void MainComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
 }
 
 //==============================================================================
+// Gestion des actions
+//==============================================================================
+void MainComponent::actionListenerCallback(const juce::String& message)
+{
+  if (message == "UpdateColors") {
+    for (int i = 0; i < m_nNbTag; i++) {
+      juce::Colour color = m_btnColors[i].findColour(juce::TextButton::buttonColourId);
+      m_Colors[i] = color.getARGB();
+    }
+    LoadInputImage();
+    SaveLegend();
+    return;
+  }
+}
+
+//==============================================================================
 // Gestion du clavier
 //==============================================================================
 bool MainComponent::keyPressed(const juce::KeyPress& key)
@@ -224,7 +246,34 @@ void MainComponent::CreateLegend()
       g.drawText(m_Tag[i], 0, i * 30, 100, 30, juce::Justification::centred);
     }
   }
-  m_Legend.setImage(legend);
+}
+
+//-----------------------------------------------------------------------------
+// Chargement de la legende dans les options de l'application
+//-----------------------------------------------------------------------------
+bool MainComponent::LoadLegend()
+{
+  juce::String legend = AppUtil::GetAppOption("Legend");
+  if (legend.isEmpty())
+    return false;
+  juce::StringArray T;
+  T.addTokens(legend, ":", "");
+  if (T.size() < m_nNbTag)
+    return false;
+  for (int i = 0; i < m_nNbTag; i++)
+    m_Colors[i] = (uint32_t)T[i].getHexValue32();
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+// Sauvegarde de la legende dans les options de l'application
+//-----------------------------------------------------------------------------
+void MainComponent::SaveLegend()
+{
+  juce::String legend;
+  for (int i = 0; i < m_nNbTag; i++)
+    legend += juce::String::toHexString(m_Colors[i]) + ":";
+  AppUtil::SaveAppOption("Legend", legend);
 }
 
 //-----------------------------------------------------------------------------

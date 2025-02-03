@@ -19,6 +19,7 @@
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
@@ -33,6 +34,7 @@
         <MODULEPATH id="juce_events" path="../../IGNMap/JUCE/modules"/>
         <MODULEPATH id="juce_graphics" path="../../IGNMap/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../IGNMap/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../IGNMap/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
     <VS2022 targetFolder="Builds/VisualStudio2022" externalLibraries="onnxruntime.lib">
@@ -50,6 +52,7 @@
         <MODULEPATH id="juce_events" path="../../IGNMap/JUCE/modules"/>
         <MODULEPATH id="juce_graphics" path="../../IGNMap/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../IGNMap/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../IGNMap/JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
     <XCODE_MAC targetFolder="Builds/MacOSX">
@@ -63,6 +66,7 @@
         <MODULEPATH id="juce_events" path="../../IGNMap/JUCE/modules"/>
         <MODULEPATH id="juce_graphics" path="../../IGNMap/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../IGNMap/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../IGNMap/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>

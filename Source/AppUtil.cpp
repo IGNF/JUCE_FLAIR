@@ -94,7 +94,7 @@ juce::String AppUtil::SaveFile(juce::String optionName, juce::String mes, juce::
 juce::String AppUtil::GetAppOption(juce::String name)
 {
 	juce::PropertiesFile::Options options;
-	options.applicationName = "IGNMapv3";
+	options.applicationName = juce::JUCEApplication::getInstance()->getApplicationName();
 	options.osxLibrarySubFolder = "Application Support";
 	juce::ApplicationProperties app;
 	app.setStorageParameters(options);
@@ -105,7 +105,7 @@ juce::String AppUtil::GetAppOption(juce::String name)
 void AppUtil::SaveAppOption(juce::String name, juce::String value)
 {
 	juce::PropertiesFile::Options options;
-	options.applicationName = "IGNMapv3";
+	options.applicationName = juce::JUCEApplication::getInstance()->getApplicationName();
 	options.osxLibrarySubFolder = "Application Support";
 	juce::ApplicationProperties app;
 	app.setStorageParameters(options);
@@ -155,4 +155,24 @@ void AppUtil::SaveTableComponent(juce::TableListBox* table)
 	table->setSize(w, h);
 	AppUtil::SaveComponent(table);
 	table->setSize(b.getWidth(), b.getHeight());
+}
+
+//==============================================================================
+// Clic sur le bouton
+//==============================================================================
+void ColourChangeButton::clicked()
+{
+	auto colourSelector = std::make_unique<juce::ColourSelector>(juce::ColourSelector::showAlphaChannel
+		| juce::ColourSelector::showColourAtTop
+		| juce::ColourSelector::editableColour
+		| juce::ColourSelector::showSliders
+		| juce::ColourSelector::showColourspace);
+
+	colourSelector->setName("background");
+	colourSelector->setCurrentColour(findColour(juce::TextButton::buttonColourId));
+	colourSelector->addChangeListener(this);
+	colourSelector->setColour(juce::ColourSelector::backgroundColourId, juce::Colours::transparentBlack);
+	colourSelector->setSize(300, 400);
+
+	juce::CallOutBox::launchAsynchronously(std::move(colourSelector), getScreenBounds(), nullptr);
 }
