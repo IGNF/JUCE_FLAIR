@@ -25,8 +25,11 @@
   <EXPORTFORMATS>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraLinkerFlags="-lonnxruntime">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="JUCE_FLAIR" headerPath="/mnt/c/dev/ONNX/onnxruntime-linux-x64-1.20.1/include"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="JUCE_FLAIR" headerPath="/mnt/c/dev/ONNX/onnxruntime-linux-x64-1.20.1/include"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="JUCE_FLAIR" headerPath="/mnt/c/dev/ONNX/onnxruntime-linux-x64-static_lib-1.20.1-glibc2_17/include"
+                       libraryPath="/mnt/c/dev/ONNX/onnxruntime-linux-x64-static_lib-1.20.1-glibc2_17/lib"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="JUCE_FLAIR" headerPath="/mnt/c/dev/ONNX/onnxruntime-linux-x64-static_lib-1.20.1-glibc2_17/include"
+                       libraryPath="/mnt/c/dev/ONNX/onnxruntime-linux-x64-static_lib-1.20.1-glibc2_17/lib"
+                       extraLinkerFlags="-lonnxruntime"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../../IGNMap/JUCE/modules"/>

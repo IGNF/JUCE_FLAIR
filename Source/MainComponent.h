@@ -11,7 +11,7 @@
     your controls and content.
 */
 class MainComponent  : public juce::Component, public juce::Button::Listener, public juce::Slider::Listener, 
-                       public juce::ComboBox::Listener, public juce::ActionListener
+                       public juce::ComboBox::Listener, public juce::ActionListener, private juce::Timer
 {
 public:
   //==============================================================================
@@ -37,6 +37,8 @@ private:
   Ort::Session* m_Session;
   int m_nTileRow;
   int m_nTileCol;
+  int m_nFactor;
+  int m_nAnime;
   juce::File m_Cache; // Cache des images telechargees
   int m_nNbTag = 18;
   uint32_t m_Colors[18] = { 0xffdb0e9a , 0xff938e7b , 0xfff80c00 , 0xffa97101 , 0xff1553ae , 0xff194a26 , 0xff46e483 , 0xfff3a60d , 0xff660082 ,
@@ -46,6 +48,8 @@ private:
                              "swimming_pool" , "snow" , "clear cut" , "mixed" , "ligneous" , "greenhouse" };
 
   // Elements d'interface
+  juce::Image m_Inference;
+  juce::Image m_Input;
   juce::TextButton  m_btnLoadModel;
   juce::TextButton  m_btnAbout;
   juce::Label m_lblModel;
@@ -60,9 +64,11 @@ private:
   bool LoadLegend();
   void SaveLegend();
   bool LoadModel();
-  bool LoadInputImage();
-  juce::String LoadTile(int col, int row);
+  bool LoadInputImage(int factor = 1);
+  juce::String LoadTile(int col, int row, int level);
   bool RunModel();
+
+  void timerCallback() override;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

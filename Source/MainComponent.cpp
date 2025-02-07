@@ -17,9 +17,12 @@ Ort::Value vec_to_tensor(std::vector<T>& data, const std::vector<std::int64_t>& 
 //-----------------------------------------------------------------------------
 MainComponent::MainComponent()
 {
+  startTimerHz(30);
+  m_nAnime = 0;
   m_Session = nullptr;
   m_nTileRow = 181013;
   m_nTileCol = 266099;
+  m_nFactor = 1;
   setWantsKeyboardFocus(true);
 
   // Creation du repertoire cache
@@ -92,6 +95,24 @@ MainComponent::~MainComponent()
 void MainComponent::paint (juce::Graphics& g)
 {
   g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+}
+
+//-----------------------------------------------------------------------------
+// Callback du timer
+//-----------------------------------------------------------------------------
+void MainComponent::timerCallback()
+{
+  if (m_nAnime == 0)
+    return;
+  juce::Image output = m_Inference.createCopy();
+  {
+    juce::Graphics g(output);
+    //g.setOpacity((m_nAnime % 11) * 0.1f);
+    g.setOpacity((float)fabs(sin(m_nAnime * 0.01)));
+    g.drawImageAt(m_Input, 0, 0);
+  }
+  m_OutputImage.setImage(output);
+  m_nAnime++;
 }
 
 //-----------------------------------------------------------------------------
@@ -202,29 +223,52 @@ void MainComponent::actionListenerCallback(const juce::String& message)
 bool MainComponent::keyPressed(const juce::KeyPress& key)
 {
   if ((key.getKeyCode() == juce::KeyPress::leftKey)) {
-    m_nTileCol--;
+    m_nTileCol--; m_nFactor = 1;
     m_sldCol.setValue(m_nTileCol, juce::NotificationType::dontSendNotification);
     LoadInputImage();
     return true;
   }
   if ((key.getKeyCode() == juce::KeyPress::rightKey)) {
-    m_nTileCol++;
+    m_nTileCol++; m_nFactor = 1;
     m_sldCol.setValue(m_nTileCol, juce::NotificationType::dontSendNotification);
     LoadInputImage();
     return true;
   }
   if ((key.getKeyCode() == juce::KeyPress::upKey)) {
-    m_nTileRow--;
+    m_nTileRow--; m_nFactor = 1;
     m_sldRow.setValue(m_nTileRow, juce::NotificationType::dontSendNotification);
     LoadInputImage();
     return true;
   }
   if ((key.getKeyCode() == juce::KeyPress::downKey)) {
-    m_nTileRow++;
+    m_nTileRow++; m_nFactor = 1;
     m_sldRow.setValue(m_nTileRow, juce::NotificationType::dontSendNotification);
     LoadInputImage();
     return true;
   }
+  if ((key.getKeyCode() == juce::KeyPress::pageUpKey)) {
+    m_nFactor++;
+    LoadInputImage(m_nFactor);
+    return true;
+  }
+  if ((key.getKeyCode() == juce::KeyPress::pageDownKey)) {
+    m_nFactor--;
+    if (m_nFactor < 1) m_nFactor = 1;
+    LoadInputImage(m_nFactor);
+    return true;
+  }
+  if ((key.getTextCharacter() == 'A') || (key.getTextCharacter() == 'a')) {
+    if ((!m_Inference.isValid()) || (m_nFactor > 1))
+      return true;
+    if (m_nAnime == 0)
+      m_nAnime++;
+    else {
+      m_nAnime = 0;
+      m_OutputImage.setImage(m_Inference);
+    }
+    return true;
+  }
+
   return false;	// On transmet l'evenement sans le traiter
 }
 
@@ -309,7 +353,7 @@ bool MainComponent::LoadModel()
 //-----------------------------------------------------------------------------
 // Chargement d'une image
 //-----------------------------------------------------------------------------
-bool MainComponent::LoadInputImage()
+bool MainComponent::LoadInputImage(int factor)
 {
   juce::Image finalImage(juce::Image::RGB, 512, 512, true);
   {
@@ -317,9 +361,15 @@ bool MainComponent::LoadInputImage()
     juce::String filename;
     juce::Image image;
 
+    int col = m_nTileCol, row = m_nTileRow;
+    if (factor > 1) {
+      col = (int)(m_nTileCol / pow(2, factor - 1)) - (m_nTileCol - 1) % 2;
+      row = (int)(m_nTileRow / pow(2, factor - 1)) - (m_nTileRow - 1) % 2;
+    }
+
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 2; j++) {
-        filename = LoadTile(m_nTileCol + i, m_nTileRow + j);
+        filename = LoadTile(col + i,row + j, 19 - (factor - 1));
         image = juce::ImageFileFormat::loadFrom(juce::File(filename));
         if (image.isValid())
           g.drawImageAt(image, i * 256, j * 256);
@@ -330,9 +380,9 @@ bool MainComponent::LoadInputImage()
       }
     }
   }
-
   m_InputImage.setImage(finalImage);
-  RunModel();
+  if (factor == 1)
+    RunModel();
 
   return true;
 }
@@ -340,9 +390,10 @@ bool MainComponent::LoadInputImage()
 //-----------------------------------------------------------------------------
 // Chargement d'une dalle de la GeoPlateforme
 //-----------------------------------------------------------------------------
-juce::String MainComponent::LoadTile(int col, int row)
+juce::String MainComponent::LoadTile(int col, int row, int level)
 {
-  juce::String filename = m_Cache.getFullPathName() + juce::File::getSeparatorString() + juce::String(col) + "_" + juce::String(row);
+  juce::String filename = m_Cache.getFullPathName() + juce::File::getSeparatorString() +
+                          juce::String(col) + "_" + juce::String(row) + "_" + juce::String(level);
   filename = juce::File::createLegalPathName(filename);
   juce::File cache(filename);
   if (cache.existsAsFile()) // Le fichier a deja ete telecharge
@@ -354,10 +405,9 @@ juce::String MainComponent::LoadTile(int col, int row)
   juce::String format = "image/jpeg";
   juce::String style = "normal";
   juce::String tms = "PM";
-  juce::String level = juce::String(19);
   juce::String request = server + "?LAYER=" + id + "&EXCEPTIONS=text/xml&FORMAT=" + format +
     "&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE=" + style + "&TILEMATRIXSET=" + tms +
-    "&TILEMATRIX=" + level + "&TILEROW=" + juce::String(row) + "&TILECOL=" + juce::String(col);
+    "&TILEMATRIX=" + juce::String(level) + "&TILEROW=" + juce::String(row) + "&TILECOL=" + juce::String(col);
 
   juce::URL url(request);
   juce::URL::DownloadTaskOptions options;
@@ -471,6 +521,8 @@ bool MainComponent::RunModel()
         arr++;
       }
     }
+    m_Inference = outImage;
+    m_Input = image.createCopy();
     m_OutputImage.setImage(outImage);
 
   }
