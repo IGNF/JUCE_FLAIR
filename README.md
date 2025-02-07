@@ -47,7 +47,9 @@ On récupère donc une image de même résolution avec les codes couleurs suivan
 
 18  : ['greenhouse','#9999ff'],
 
-19  : ['other','#000000'],
+19  : ['other','#000000']
+
+Les couleurs sont modifiables : il suffit de cliquer sur la légende pour la modifier.
 
 ## Dépendances
 Il faut installer JUCE (https://juce.com/) et lancer le Projucer pour créer le projet.
@@ -66,3 +68,7 @@ JUCE_FLAIR n'utilise que les modèles sur 3 canaux RGB et n'a donc pas la même 
 JUCE_FLAIR récupère des images provenant de la GéoPlateforme : ce sont des images à 15 cm de la couche ORTHOIMAGERY.ORTHOPHOTOS à 15 cm de résolution. 
 Ces images ont été compressées en JPEG pour la diffusion sur Internet et n'ont donc pas la qualité des orthophotos avant compression, d'où une dégradation des résultats.
 
+## Utilisation
+Pour se déplacer, on utilise les flèches du clavier.
+Les touches "PageUp" et "PageDown" permettent de zoomer.
+La touche "A" du clavier permet d'avoir un affichage dynamique de l'image inférence.
