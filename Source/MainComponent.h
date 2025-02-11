@@ -27,6 +27,8 @@ public:
   void sliderValueChanged(juce::Slider* slider) override;
   void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
   void actionListenerCallback(const juce::String& message) override;
+  void mouseDoubleClick(const juce::MouseEvent& event) override;
+  void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
 
 private:
   class LegendButton : public ColourChangeButton, public juce::ActionBroadcaster {
@@ -46,6 +48,7 @@ private:
   juce::String m_Tag[18] = { "building" , "pervious surface" , "impervious surface", "bare soil" , "water" , "coniferous" ,
                              "deciduous" , "brushwood" , "vineyard" , "herbaceous vegetation" , "agricultural land" , "plowed land",
                              "swimming_pool" , "snow" , "clear cut" , "mixed" , "ligneous" , "greenhouse" };
+  bool m_State[18];
 
   // Elements d'interface
   juce::Image m_Inference;
@@ -59,6 +62,7 @@ private:
   juce::Slider m_sldCol;
   juce::ComboBox m_cbxPlace;
   LegendButton m_btnColors[18];
+  juce::ToggleButton m_btnState[18];
 
   void CreateLegend();
   bool LoadLegend();

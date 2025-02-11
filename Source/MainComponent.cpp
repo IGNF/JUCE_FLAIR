@@ -41,6 +41,7 @@ MainComponent::MainComponent()
 
   addAndMakeVisible(m_InputImage);
   addAndMakeVisible(m_OutputImage);
+  m_InputImage.setInterceptsMouseClicks(false, false);
 
   m_sldRow.setSliderStyle(juce::Slider::LinearHorizontal);
   m_sldRow.setRange(175000., 194000., 1.);
@@ -76,6 +77,11 @@ MainComponent::MainComponent()
     m_btnColors[i].setColour(juce::TextButton::buttonColourId, juce::Colour(m_Colors[i]));
     addAndMakeVisible(m_btnColors[i]);
     m_btnColors[i].addActionListener(this);
+    m_btnState[i].setButtonText("");
+    m_btnState[i].setToggleState(true, juce::NotificationType::dontSendNotification);
+    addAndMakeVisible(m_btnState[i]);
+    m_btnState[i].addListener(this);
+    m_State[i] = true;
   }
 
   setSize (1000, 600);
@@ -121,11 +127,14 @@ void MainComponent::timerCallback()
 void MainComponent::resized()
 {
   auto b = getLocalBounds();
+  int dim_image = std::min<int>(b.getWidth() / 2 - 80 , b.getHeight() - 100);
 
-  m_InputImage.setBounds(5, 5, b.getWidth() / 2 - 60, b.getHeight() - 100);
-  m_OutputImage.setBounds(b.getWidth() / 2 - 60 + 5, 5, b.getWidth() / 2 - 60, b.getHeight() - 100);
-  for (int i = 0; i < m_nNbTag; i++)
+  m_InputImage.setBounds(5, 5, dim_image, dim_image);
+  m_OutputImage.setBounds(b.getWidth() / 2 - 80 + 5, 5, dim_image, dim_image);
+  for (int i = 0; i < m_nNbTag; i++) {
+    m_btnState[i].setBounds(b.getWidth() - 135, 5 + 30 * i, 30, 30);
     m_btnColors[i].setBounds(b.getWidth() - 105, 5 + 30 * i, 100, 30);
+  }
 
   m_btnLoadModel.setBounds(5, b.getHeight() - 35, 80, 30);
   m_lblModel.setBounds(85, b.getHeight() - 35, 200, 30);
@@ -140,14 +149,24 @@ void MainComponent::resized()
 //-----------------------------------------------------------------------------
 void 	MainComponent::buttonClicked(juce::Button* button)
 {
-  if (button == &m_btnLoadModel)
+  if (button == &m_btnLoadModel) {
     LoadModel();
+    return;
+  }
   if (button == &m_btnAbout) {
     juce::String message = juce::String("Permet d'inférer un modele type FLAIR au format ONNX\n");
     message += juce::String("Charge des dalles orthophotos de la GéoPlateforme (à 15 cm de résolution)\n\n");
     message += juce::String("Les flèches du clavier permettent de se déplacer\n\n");
     message += juce::String("(C) 2025 IGN / DSI / SIMV\n");
     juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon, juce::translate("About JUCE_FLAIR"), message, "OK");
+    return;
+  }
+  for (int i = 0; i < m_nNbTag; i++) {
+    if (button != &m_btnState[i])
+      continue;
+    m_State[i] = m_btnState[i].getToggleState();
+    LoadInputImage();
+    return;
   }
 }
 
@@ -270,6 +289,64 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
   }
 
   return false;	// On transmet l'evenement sans le traiter
+}
+
+//-----------------------------------------------------------------------------
+// Gestion du double clic
+//-----------------------------------------------------------------------------
+void MainComponent::mouseDoubleClick(const juce::MouseEvent& event)
+{
+  auto b = m_InputImage.getBounds();
+  if (!b.contains(event.x, event.y))
+    return;
+  if (m_nFactor == 1)
+    return;
+
+  double x = ((double)(event.x - b.getX()) / (double)b.getWidth());
+  double y = ((double)(event.y - b.getY()) / (double)b.getHeight());
+
+  int col = (int)(m_nTileCol / pow(2, m_nFactor - 1)) - (m_nTileCol - 1) % 2;
+  int row = (int)(m_nTileRow / pow(2, m_nFactor - 1)) - (m_nTileRow - 1) % 2;
+
+  for (int i = 1; i < m_nFactor; i++) {
+    if (x > 0.5) {
+      col++;
+      x -= 0.5;
+    }
+    if (y > 0.5) {
+      row++;
+      y -= 0.5;
+    }
+    col *= 2;
+    row *= 2;
+    x *= 2.;
+    y *= 2.;
+  }
+
+  m_nFactor = 1;
+  m_nTileRow = row;
+  m_sldRow.setValue(m_nTileRow, juce::NotificationType::dontSendNotification);
+  m_nTileCol = col;
+  m_sldCol.setValue(m_nTileCol, juce::NotificationType::dontSendNotification);
+  LoadInputImage();
+}
+
+//-----------------------------------------------------------------------------
+// Gestion de la molette de la souris
+//-----------------------------------------------------------------------------
+void MainComponent::mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel)
+{
+  auto b = m_InputImage.getBounds();
+  if (!b.contains(event.x, event.y))
+    return;
+
+  if (wheel.deltaY > 0) {
+    m_nFactor--;
+    if (m_nFactor < 1) m_nFactor = 1;
+  }
+  else
+    m_nFactor++;
+  LoadInputImage(m_nFactor);
 }
 
 //-----------------------------------------------------------------------------
@@ -500,19 +577,19 @@ bool MainComponent::RunModel()
       uint32_t* rgba = (uint32_t*)outData.getLinePointer(i);
       for (int j = 0; j < outData.width; j++) {
         float max = -1000., value;
-        int index = 0;
+        int index = -1;
 
         // Recherche de la valeur maximale
         for (int k = 0; k < output_shape[1]; k++) {
           value = *(arr + k * output_shape[2] * output_shape[3]); // Classement en plans de couleur
-          if (value > max) {
+          if ((value > max)&&(m_State[k])) {
             max = value;
             index = k;
           }
         }
 
         // Application d'une table de couleurs pour rendre la sortie jolie ...
-        if (index < m_nNbTag)
+        if ((index >= 0)&&(index < m_nNbTag))
           *rgba = m_Colors[index];
         else
           *rgba = 0;
