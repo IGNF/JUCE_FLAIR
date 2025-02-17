@@ -36,6 +36,7 @@ private:
     void 	colourChanged() override { sendActionMessage("UpdateColors"); }
   };
 
+  Ort::Env* m_Env;
   Ort::Session* m_Session;
   int m_nTileRow;
   int m_nTileCol;

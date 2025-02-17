@@ -19,6 +19,7 @@ MainComponent::MainComponent()
 {
   startTimerHz(30);
   m_nAnime = 0;
+  m_Env = nullptr;
   m_Session = nullptr;
   m_nTileRow = 181013;
   m_nTileCol = 266099;
@@ -94,6 +95,8 @@ MainComponent::~MainComponent()
 {
   if (m_Session != nullptr)
     delete m_Session;
+  if (m_Env != nullptr)
+    delete m_Env;
   m_Cache.deleteRecursively();
 }
 
@@ -402,6 +405,9 @@ void MainComponent::SaveLegend()
 //-----------------------------------------------------------------------------
 bool MainComponent::LoadModel()
 {
+  if (m_Env == nullptr) 
+    m_Env = new  Ort::Env(ORT_LOGGING_LEVEL_WARNING, "JUCE_FLAIR");
+
   if (m_Session != nullptr)   // On detruit la session si un modele a deja ete charge
     delete m_Session;
 
@@ -418,9 +424,8 @@ bool MainComponent::LoadModel()
 #endif
 
   // Creation d'une session ONNXRuntime
-  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "JUCE_FLAIR");
   Ort::SessionOptions session_options;
-  m_Session = new Ort::Session(env, model_file.c_str(), session_options);
+  m_Session = new Ort::Session(*m_Env, model_file.c_str(), session_options);
 
   LoadInputImage();
 
